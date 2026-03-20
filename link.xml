@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<linker>
+	<assembly fullname="Nox.CCK.Notifications" preserve="all" />
+	<assembly fullname="Nox.Mods.Notifications" preserve="all" />
+	<assembly fullname="Nox.Notifications" preserve="all" />
+	<assembly fullname="Nox.Notifications.Runtime" preserve="all" />
+</linker>

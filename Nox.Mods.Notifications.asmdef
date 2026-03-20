@@ -1,0 +1,19 @@
+{
+    "name": "Nox.Mods.Notifications",
+    "rootNamespace": "Nox.Mods.Notifications",
+    "references": [
+        "Nox.CCK",
+        "UniTask",
+        "Nox.Notifications",
+        "Nox.CCK.Notifications"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

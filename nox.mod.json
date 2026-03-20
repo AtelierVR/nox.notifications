@@ -1,0 +1,45 @@
+{
+  "type": "mod",
+  "id": "nox.notifications",
+  "provides": [
+    "notifications"
+  ],
+  "name": "Notifications",
+  "version": "1.0.0",
+  "description": "Provides notification system with channels, channel groups, and rich notification styles.",
+  "license": "GPL-3.0",
+  "icon": null,
+  "contact": {
+    "email": "hactazia@gmail.com",
+    "source": "https://github.com/AtelierVR/nox.notifications",
+    "website": "https://nox.hactazia.fr/",
+    "issues": "https://github.com/AtelierVR/nox.notifications/issues"
+  },
+  "authors": [
+    {
+      "name": "Hactazia",
+      "email": "hactazia@gmail.com",
+      "website": "https://hactazia.fr/"
+    }
+  ],
+  "contributors": [],
+  "relations": [
+    {
+      "id": "settings",
+      "type": "depends"
+    }
+  ],
+  "constraints": [
+    {
+      "type": "after",
+      "id": "settings"
+    }
+  ],
+  "entrypoints": {
+    "main": [
+      "Nox.Notifications.Runtime.Main"
+    ]
+  },
+  "references": [],
+  "permissions": []
+}
