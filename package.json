@@ -1,5 +1,6 @@
 {
   "name": "nox.notifications",
   "displayName": "Nox - Notifications",
-  "version": "1.0.0"
+  "version": "1.0.0",
+  "description": "Notification system with channels, groups, and rich notification styles."
 }
