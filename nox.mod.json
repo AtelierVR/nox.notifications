@@ -22,7 +22,6 @@
       "website": "https://hactazia.fr/"
     }
   ],
-  "contributors": [],
   "relations": [
     {
       "id": "settings",
@@ -39,7 +38,5 @@
     "main": [
       "Nox.Notifications.Runtime.Main"
     ]
-  },
-  "references": [],
-  "permissions": []
+  }
 }
