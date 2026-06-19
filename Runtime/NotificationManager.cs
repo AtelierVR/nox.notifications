@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Nox.CCK.Events;
 using UnityEngine;
 
 namespace Nox.Notifications.Runtime {
@@ -10,64 +11,59 @@ namespace Nox.Notifications.Runtime {
 	/// </summary>
 	internal sealed class NotificationManager : INotificationManager {
 		// ── Active notifications ──────────────────────────────────────────────
-		private readonly Dictionary<(string tag, int id), INotification> _active = new();
+		private readonly Dictionary<int, INotification> _active = new();
 
 		// ── Channels ──────────────────────────────────────────────────────────
 		private readonly Dictionary<string, NotificationChannel>      _channels = new();
 		private readonly Dictionary<string, NotificationChannelGroup> _groups   = new();
 
 		// ── Events ────────────────────────────────────────────────────────────
-		public event Action<INotification>      OnNotificationPosted;
-		public event Action<string, int>        OnNotificationCancelled;
-		public event Action<INotification, string> OnNotificationActionInvoked;
+		public NoxEvent<INotification>      OnNotificationPosted        { get; } = new();
+		public NoxEvent<int>                OnNotificationCancelled     { get; } = new();
+		public NoxEvent<INotification, string> OnNotificationActionInvoked { get; } = new();
 
 		// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 		// Posting
 		// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-		public void Notify(int id, INotification notification)
-			=> Notify(null, id, notification);
-
-		public void Notify(string tag, int id, INotification notification) {
+		public int Notify(INotification notification) {
 			if (notification == null) {
 				Debug.LogWarning("[Notifications] Notify called with a null notification.");
-				return;
+				return -1;
 			}
 
-			var key = (tag, id);
-			_active[key] = notification;
+			_active[notification.Id] = notification;
 
-			ScheduleTimeout(tag, id, notification);
+			ScheduleTimeout(notification.Id, notification);
 			OnNotificationPosted?.Invoke(notification);
-			Debug.Log($"[Notifications] Posted: tag={tag ?? "(none)"} id={id} title=\"{notification.Title}\"");
+			Debug.Log($"[Notifications] Posted: id={notification.Id} title=\"{notification.Title}\"");
+			return notification.Id;
 		}
 
 		// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 		// Cancelling
 		// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-		public void Cancel(int id)
-			=> Cancel(null, id);
-
-		public void Cancel(string tag, int id) {
-			var key = (tag, id);
-			if (!_active.Remove(key)) return;
-			OnNotificationCancelled?.Invoke(tag, id);
-			Debug.Log($"[Notifications] Cancelled: tag={tag ?? "(none)"} id={id}");
+		public void Cancel(int id) {
+			if (!_active.Remove(id)) return;
+			OnNotificationCancelled?.Invoke(id);
+			Debug.Log($"[Notifications] Cancelled: id={id}");
 		}
 
 		public void CancelAll() {
-			foreach (var key in _active.Keys.ToArray())
-				Cancel(key.tag, key.id);
+			foreach (var id in _active.Keys.ToArray())
+				Cancel(id);
 		}
 
 		// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 		// Querying
 		// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-		public bool IsPosted(int id)          => _active.ContainsKey((null, id));
-		public bool IsPosted(string tag, int id) => _active.ContainsKey((tag, id));
-		public INotification[] GetActiveNotifications() => _active.Values.ToArray();
+		public bool IsPosted(int id) 
+			=> _active.ContainsKey(id);
+
+		public INotification[] GetActiveNotifications()
+			=> _active.Values.ToArray();
 
 		// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 		// Channels
@@ -111,10 +107,10 @@ namespace Nox.Notifications.Runtime {
 				grp.RemoveChannel(channelId);
 
 			// Cancel all active notifications on this channel
-			foreach (var key in _active.Keys
+			foreach (var id in _active.Keys
 				         .Where(k => _active[k].ChannelId == channelId)
 				         .ToArray())
-				Cancel(key.tag, key.id);
+				Cancel(id);
 
 			Debug.Log($"[Notifications] Channel deleted: {channelId}");
 		}
@@ -173,27 +169,27 @@ namespace Nox.Notifications.Runtime {
 		/// Invokes an action on a notification and raises the action event.
 		/// Called externally by the UI layer when the user taps an action button.
 		/// </summary>
-		internal void InvokeAction(string tag, int id, string actionId) {
-			if (!_active.TryGetValue((tag, id), out var notification)) return;
+		internal void InvokeAction(int id, string actionId) {
+			if (!_active.TryGetValue(id, out var notification)) return;
 			OnNotificationActionInvoked?.Invoke(notification, actionId);
 
 			if (notification.AutoCancel)
-				Cancel(tag, id);
+				Cancel(id);
 		}
 
-		private void ScheduleTimeout(string tag, int id, INotification notification) {
+		private void ScheduleTimeout(int id, INotification notification) {
 			if (notification is not INotificationCompat compat) return;
 			if (compat.TimeoutAfter == null) return;
 
 			// Use a simple fire-and-forget coroutine via UniTask-free approach
 			var timeout = compat.TimeoutAfter.Value;
-			ScheduleCancelAfter(tag, id, timeout);
+			ScheduleCancelAfter(id, timeout);
 		}
 
-		private async void ScheduleCancelAfter(string tag, int id, TimeSpan delay) {
+		private async void ScheduleCancelAfter(int id, TimeSpan delay) {
 			await System.Threading.Tasks.Task.Delay(delay);
-			if (IsPosted(tag, id))
-				Cancel(tag, id);
+			if (IsPosted(id))
+				Cancel(id);
 		}
 
 		internal void Dispose() {

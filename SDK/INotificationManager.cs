@@ -1,4 +1,4 @@
-using System;
+using Nox.CCK.Events;
 
 namespace Nox.Notifications {
 	/// <summary>
@@ -16,16 +16,8 @@ namespace Nox.Notifications {
 		/// </summary>
 		/// <param name="id">Unique numeric identifier for the notification.</param>
 		/// <param name="notification">The notification to post.</param>
-		public void Notify(int id, INotification notification);
-
-		/// <summary>
-		/// Post or update a notification with the specified tag and ID.
-		/// The tag allows two notifications to share the same ID without collision.
-		/// </summary>
-		/// <param name="tag">Optional tag for the notification.</param>
-		/// <param name="id">Unique numeric identifier for the notification.</param>
-		/// <param name="notification">The notification to post.</param>
-		public void Notify(string tag, int id, INotification notification);
+		/// <returns>The notification id.</returns>
+		public int Notify(INotification notification);
 
 		// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 		// Cancelling
@@ -35,12 +27,7 @@ namespace Nox.Notifications {
 		/// <param name="id">The ID of the notification to cancel.</param>
 		public void Cancel(int id);
 
-		/// <summary>Cancel a previously posted notification by tag and ID.</summary>
-		/// <param name="tag">The tag of the notification to cancel.</param>
-		/// <param name="id">The ID of the notification to cancel.</param>
-		public void Cancel(string tag, int id);
-
-		/// <summary>Cancel all notifications posted by the calling mod.</summary>
+		/// <summary>Cancel all notifications.</summary>
 		public void CancelAll();
 
 		// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -51,11 +38,6 @@ namespace Nox.Notifications {
 		/// Returns whether a notification with the given ID is currently active.
 		/// </summary>
 		public bool IsPosted(int id);
-
-		/// <summary>
-		/// Returns whether a notification with the given tag and ID is currently active.
-		/// </summary>
-		public bool IsPosted(string tag, int id);
 
 		/// <summary>
 		/// Returns all active (non-cancelled) notifications.
@@ -126,18 +108,18 @@ namespace Nox.Notifications {
 		/// Raised when a notification is successfully posted.
 		/// The argument contains the posted notification.
 		/// </summary>
-		public event Action<INotification> OnNotificationPosted;
+		public NoxEvent<INotification> OnNotificationPosted { get; }
 
 		/// <summary>
 		/// Raised when a notification is cancelled.
-		/// Arguments: (tag, id) of the cancelled notification.
+		/// Argument: id of the cancelled notification.
 		/// </summary>
-		public event Action<string, int> OnNotificationCancelled;
+		public NoxEvent<int> OnNotificationCancelled { get; }
 
 		/// <summary>
 		/// Raised when a notification action is invoked by the user.
 		/// Arguments: (notification, actionId).
 		/// </summary>
-		public event Action<INotification, string> OnNotificationActionInvoked;
+		public NoxEvent<INotification, string> OnNotificationActionInvoked { get; }
 	}
 }

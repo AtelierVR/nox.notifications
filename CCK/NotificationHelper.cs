@@ -22,17 +22,14 @@ namespace Nox.CCK.Notifications {
 				.SetTitle(title)
 				.SetContentText(text)
 				.Build();
-			manager.Notify(n.Id, n);
-			return n.Id;
+			return manager.Notify(n);
 		}
 
 		/// <summary>
 		/// Posts a rich compat notification using a pre-built <see cref="INotificationCompat"/>.
 		/// </summary>
-		public static int NotifyCompat(this INotificationManager manager, INotificationCompat notification) {
-			manager.Notify(notification.Tag, notification.Id, notification);
-			return notification.Id;
-		}
+		public static int NotifyCompat(this INotificationManager manager, INotificationCompat notification)
+			=> manager.Notify(notification);
 
 		// ── Channel convenience ───────────────────────────────────────────────
 

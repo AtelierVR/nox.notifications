@@ -26,17 +26,36 @@
     {
       "id": "settings",
       "type": "depends"
+    },
+    {
+      "id": "controllers",
+      "type": "depends"
+    },
+    {
+      "id": "ui",
+      "type": "depends"
     }
   ],
   "constraints": [
     {
       "type": "after",
       "id": "settings"
+    },
+    {
+      "type": "after",
+      "id": "controllers"
+    },
+    {
+      "type": "after",
+      "id": "ui"
     }
   ],
   "entrypoints": {
     "main": [
       "Nox.Notifications.Runtime.Main"
+    ],
+    "client": [
+      "Nox.Notifications.Runtime.Client"
     ]
   }
 }

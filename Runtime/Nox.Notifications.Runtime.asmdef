@@ -7,7 +7,9 @@
         "Nox.CCK",
         "Nox.CCK.Notifications",
         "Nox.Settings",
-        "Nox.CCK.Settings"
+        "Nox.CCK.Settings",
+        "Nox.Controllers",
+        "Nox.UI"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

@@ -1,7 +1,6 @@
 using Nox.CCK.Language;
 using Nox.CCK.Mods.Cores;
 using Nox.CCK.Mods.Initializers;
-using Nox.CCK.Settings;
 using Nox.Settings;
 using UnityEngine;
 
@@ -41,6 +40,7 @@ namespace Nox.Notifications.Runtime {
 				new Settings.SoundSetting(),
 				new Settings.VibrationSetting(),
 				new Settings.BadgeSetting(),
+				new Settings.SendNotificationSetting(),
 			};
 			foreach (var h in _settingHandlers)
 				SettingAPI?.Add(h);
@@ -65,26 +65,17 @@ namespace Nox.Notifications.Runtime {
 
 		// ── INotificationManager delegation ───────────────────────────────────
 
-		public void Notify(int id, INotification notification)
-			=> _manager.Notify(id, notification);
-
-		public void Notify(string tag, int id, INotification notification)
-			=> _manager.Notify(tag, id, notification);
+		public int Notify(INotification notification)
+			=> _manager.Notify(notification);
 
 		public void Cancel(int id)
 			=> _manager.Cancel(id);
-
-		public void Cancel(string tag, int id)
-			=> _manager.Cancel(tag, id);
 
 		public void CancelAll()
 			=> _manager.CancelAll();
 
 		public bool IsPosted(int id)
 			=> _manager.IsPosted(id);
-
-		public bool IsPosted(string tag, int id)
-			=> _manager.IsPosted(tag, id);
 
 		public INotification[] GetActiveNotifications()
 			=> _manager.GetActiveNotifications();
@@ -122,27 +113,21 @@ namespace Nox.Notifications.Runtime {
 		public INotificationCompatBuilder CreateCompatBuilder(string channelId)
 			=> _manager.CreateCompatBuilder(channelId);
 
-		public event System.Action<INotification> OnNotificationPosted {
-			add    => _manager.OnNotificationPosted += value;
-			remove => _manager.OnNotificationPosted -= value;
-		}
+		public Nox.CCK.Events.NoxEvent<INotification> OnNotificationPosted
+			=> _manager.OnNotificationPosted;
 
-		public event System.Action<string, int> OnNotificationCancelled {
-			add    => _manager.OnNotificationCancelled += value;
-			remove => _manager.OnNotificationCancelled -= value;
-		}
+		public Nox.CCK.Events.NoxEvent<int> OnNotificationCancelled
+			=> _manager.OnNotificationCancelled;
 
-		public event System.Action<INotification, string> OnNotificationActionInvoked {
-			add    => _manager.OnNotificationActionInvoked += value;
-			remove => _manager.OnNotificationActionInvoked -= value;
-		}
+		public Nox.CCK.Events.NoxEvent<INotification, string> OnNotificationActionInvoked
+			=> _manager.OnNotificationActionInvoked;
 
 		// ── Helper used by the UI layer ───────────────────────────────────────
 
 		/// <summary>
 		/// Triggers a notification action (called by the UI when the user taps an action button).
 		/// </summary>
-		public void InvokeAction(string tag, int id, string actionId)
-			=> _manager.InvokeAction(tag, id, actionId);
+		public void InvokeAction(int id, string actionId)
+			=> _manager.InvokeAction(id, actionId);
 	}
 }
