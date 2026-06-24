@@ -31,3 +31,29 @@ MonoBehaviour:
       value: "Vibration"
     - key: settings.entry.notifications.badge.label
       value: "Badge Count"
+    - key: settings.debug.send_notification
+      value: "Send Test Notification"
+    - key: settings.debug.send_notification.send
+      value: "Send"
+  - IETF: fr-FR
+    entries:
+    - key: settings.page.notifications.title
+      value: "Paramètres de notification"
+    - key: settings.page.notifications.label
+      value: "Notifications"
+    - key: settings.group.notifications.general.label
+      value: "Général"
+    - key: settings.entry.notifications.enabled.label
+      value: "Activer les notifications"
+    - key: settings.entry.notifications.do_not_disturb.label
+      value: "Ne pas déranger"
+    - key: settings.entry.notifications.sound.label
+      value: "Son"
+    - key: settings.entry.notifications.vibration.label
+      value: "Vibration"
+    - key: settings.entry.notifications.badge.label
+      value: "Badge"
+    - key: settings.debug.send_notification
+      value: "Envoyer une notification test"
+    - key: settings.debug.send_notification.send
+      value: "Envoyer"

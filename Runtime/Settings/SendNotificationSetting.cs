@@ -1,5 +1,6 @@
 using System;
 using Nox.CCK.Settings;
+using Nox.Settings;
 using Nox.UI;
 using UnityEngine;
 using Logger = Nox.CCK.Utils.Logger;
@@ -26,7 +27,7 @@ namespace Nox.Notifications.Runtime.Settings
         protected override GameObject GetPrefab()
             => Main.CoreAPI.AssetAPI.GetAsset<GameObject>("settings:prefabs/button.prefab");
 
-        protected override void OnClick(IMenu menu)
+        public override void OnClick(IContext context)
         {
             var builder = Main.Instance.CreateBuilder("default");
             builder.SetTitle("Test Notification")
