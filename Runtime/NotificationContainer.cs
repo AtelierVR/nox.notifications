@@ -1,5 +1,3 @@
-using Nox.CCK.Players;
-using Nox.Controllers;
 using UnityEngine;
 
 namespace Nox.Notifications.Runtime
@@ -42,8 +40,6 @@ namespace Nox.Notifications.Runtime
 
     /// <summary>
     /// World-space follow container for notification panels.
-    /// Managed by <see cref="Client"/> (the IClientModInitializer entrypoint)
-    /// which wires the active controller for orbit tracking.
     ///
     /// Holds a <see cref="NotificationRoot"/> RectTransform where individual
     /// notification UI elements can be instantiated.
@@ -95,7 +91,7 @@ namespace Nox.Notifications.Runtime
         [Range(30f, 720f)]
         private float m_MaxHorizontalSpeed = 270f;
 
-        [Tooltip("Fixed height offset from the orbit center in meters. " +
+        [Tooltip("Fixed height offset from the look target (camera) in meters. " +
                  "Negative = below eye level (more ergonomic, less obstructive). " +
                  "Keeps the panel from moving too high or low when looking up/down.")]
         [SerializeField]
@@ -136,20 +132,6 @@ namespace Nox.Notifications.Runtime
         [SerializeField]
         [Range(10f, 120f)]
         private float m_WakeAngleThreshold = 45f;
-
-        [Header("Controller")]
-        [Tooltip("Which controller part to use as the orbit center. Default: RightHand (13).")]
-        [SerializeField]
-        private PlayerRig m_OrbitPart = PlayerRig.RightHand;
-
-        // ── Runtime references (set by Client.cs) ─────────────────────────
-
-        /// <summary>
-        /// Controller used to read orbit center position and forward direction
-        /// each frame. Set by <see cref="Client"/> on controller change.
-        /// When null, falls back to <see cref="m_OrbitCenter"/> Transform.
-        /// </summary>
-        public IController OrbitController { get; set; }
 
         // ── Public properties ──────────────────────────────────────────────
 
@@ -201,6 +183,44 @@ namespace Nox.Notifications.Runtime
             m_Transform = transform;
         }
 
+        /// <summary>
+        /// Immediately places the panel at its ideal position and rotation,
+        /// bypassing all smoothing/lerp. Useful right after spawn, after a
+        /// teleport, or whenever the panel should snap instead of catching up.
+        /// Resets SmartFollow state so it doesn't immediately drift or lock
+        /// against the freshly snapped position.
+        /// </summary>
+        public void SnapToTarget()
+        {
+            if (m_Transform == null)
+                m_Transform = transform;
+
+            Camera lookTarget = ResolveLookTarget();
+            if (lookTarget == null)
+                return;
+
+            Vector3 orbitCenter = GetOrbitCenter(lookTarget);
+            float distance = GetDistance();
+
+            Vector3 desiredDir = ComputeTargetDirection(lookTarget, orbitCenter);
+            Vector3 targetPos = ComputeOrbitPosition(lookTarget, orbitCenter, desiredDir, distance);
+            Quaternion targetRot = ComputeTargetRotation(lookTarget, targetPos);
+
+            m_Transform.position = targetPos;
+            m_Transform.rotation = targetRot;
+
+            // Reset SmartFollow state so the next LateUpdate doesn't lerp
+            // away from the position we just snapped to.
+            m_IsInStandby = false;
+            m_IsRecovering = false;
+            m_StandbyTimer = 0f;
+            m_StandbyElapsed = 0f;
+            m_StandbyPosition = targetPos;
+            m_StandbyRotation = targetRot;
+            m_LastCameraForward = lookTarget.transform.forward;
+            m_LastOrbitCenter = orbitCenter;
+        }
+
         private void LateUpdate()
         {
             Camera lookTarget = ResolveLookTarget();
@@ -236,7 +256,7 @@ namespace Nox.Notifications.Runtime
                         // Recovering: lerp from frozen position back toward the
                         // orbit ring. Once inside the soft band, resume normal follow.
                         Vector3 desiredDir = ComputeTargetDirection(lookTarget, orbitCenter);
-                        Vector3 targetPos = ComputeOrbitPosition(orbitCenter, desiredDir, distance);
+                        Vector3 targetPos = ComputeOrbitPosition(lookTarget, orbitCenter, desiredDir, distance);
 
                         float t = Mathf.Clamp01(m_SmoothSpeed * Time.deltaTime);
                         m_Transform.position = Vector3.Lerp(m_Transform.position, targetPos, t);
@@ -266,7 +286,7 @@ namespace Nox.Notifications.Runtime
         private void ApplySmoothFollow(Camera lookTarget, Vector3 orbitCenter, float distance)
         {
             Vector3 desiredDir = ComputeTargetDirection(lookTarget, orbitCenter);
-            Vector3 targetPos = ComputeOrbitPosition(orbitCenter, desiredDir, distance);
+            Vector3 targetPos = ComputeOrbitPosition(lookTarget, orbitCenter, desiredDir, distance);
 
             float t = Mathf.Clamp01(m_SmoothSpeed * Time.deltaTime);
             m_Transform.position = new Vector3(
@@ -399,17 +419,11 @@ namespace Nox.Notifications.Runtime
 
         /// <summary>
         /// Returns the orbit center position. Priority:
-        /// 1. <see cref="OrbitPositionOverride"/> (set from code)
-        /// 2. <see cref="m_OrbitCenter"/> Transform
-        /// 3. Look target (camera) position
+        /// 1. <see cref="m_OrbitCenter"/> Transform
+        /// 2. Look target (camera) position
         /// </summary>
         private Vector3 GetOrbitCenter(Camera lookTarget)
         {
-            // Priority: Controller part > Transform > Camera
-            if (OrbitController != null
-                && OrbitController.TryGetPart(m_OrbitPart.ToIndex(), out var part))
-                return part.GetPosition();
-
             if (m_OrbitCenter != null)
                 return m_OrbitCenter.position;
 
@@ -457,12 +471,12 @@ namespace Nox.Notifications.Runtime
 
         /// <summary>
         /// Places the object at the given direction and distance from the orbit center,
-        /// with the Y position clamped to orbit center height + offset.
+        /// with the Y position driven by the look target (camera) height + offset.
         /// </summary>
-        private Vector3 ComputeOrbitPosition(Vector3 orbitCenter, Vector3 direction, float distance)
+        private Vector3 ComputeOrbitPosition(Camera lookTarget, Vector3 orbitCenter, Vector3 direction, float distance)
         {
             Vector3 pos = orbitCenter + direction.normalized * distance;
-            pos.y = orbitCenter.y + m_HeightOffset;
+            pos.y = lookTarget.transform.position.y + m_HeightOffset;
             return pos;
         }
 
@@ -510,11 +524,13 @@ namespace Nox.Notifications.Runtime
             Vector3 orbitCenter = GetOrbitCenter(lookTarget);
             float dist = GetDistance();
             Vector3 targetDir = ComputeTargetDirection(lookTarget, orbitCenter);
-            Vector3 targetPos = ComputeOrbitPosition(orbitCenter, targetDir, dist);
+            Vector3 targetPos = ComputeOrbitPosition(lookTarget, orbitCenter, targetDir, dist);
 
-            // Draw orbit ring (horizontal circle at fixed height around orbit center)
+            // Draw orbit ring (horizontal circle at look-target height around orbit center)
             Gizmos.color = new Color(0f, 1f, 1f, 0.3f);
-            DrawGizmoCircle(orbitCenter + Vector3.up * m_HeightOffset, dist, 48);
+            Vector3 ringCenter = orbitCenter;
+            ringCenter.y = lookTarget.transform.position.y + m_HeightOffset;
+            DrawGizmoCircle(ringCenter, dist, 48);
 
             // Draw orbit center marker
             Gizmos.color = Color.green;

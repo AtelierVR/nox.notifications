@@ -110,11 +110,8 @@ namespace Nox.Notifications.Runtime
         {
             if (controller == null || Container == null)
                 return;
-            // Wire the controller to the container so it reads orbit position
-            // and forward direction directly in its own LateUpdate.
-            Container.OrbitController = controller;
-            // Set the camera as the look target so the panel faces the headset.
             Container.LookTarget = controller.GetCamera();
+            Container.SnapToTarget();
         }
 
         // ── Follower creation ──────────────────────────────────────────────
