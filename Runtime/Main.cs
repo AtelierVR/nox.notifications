@@ -44,8 +44,6 @@ namespace Nox.Notifications.Runtime {
 			};
 			foreach (var h in _settingHandlers)
 				SettingAPI?.Add(h);
-
-			Debug.Log("[Notifications] Mod initialized.");
 		}
 
 		public void OnDisposeMain() {
@@ -60,7 +58,6 @@ namespace Nox.Notifications.Runtime {
 			_manager = null;
 			Instance = null;
 			CoreAPI  = null;
-			Debug.Log("[Notifications] Mod disposed.");
 		}
 
 		// ── INotificationManager delegation ───────────────────────────────────
