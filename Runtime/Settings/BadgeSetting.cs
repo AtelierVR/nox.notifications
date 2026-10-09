@@ -8,15 +8,17 @@ namespace Nox.Notifications.Runtime.Settings {
 	/// Path: notifications > badge
 	/// </summary>
 	internal sealed class BadgeSetting : ToggleHandler {
-		public override string[] GetPath()
+		public override string[] Path
 			=> new[] { "notifications", "badge" };
+
+		public override int Order => 90000;
 
 		protected override GameObject GetPrefab()
 			=> Main.CoreAPI.AssetAPI.GetAsset<GameObject>("settings:prefabs/toggle.prefab");
 
 		public BadgeSetting() {
 			SetValue(NotificationSettings.Badge, notify: false);
-			SetLabelKey($"settings.entry.{string.Join(".", GetPath())}.label");
+			SetLabelKey($"settings.entry.{string.Join(".", Path)}.label");
 		}
 
 		protected override void OnValueChanged(bool value)

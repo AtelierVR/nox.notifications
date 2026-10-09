@@ -48,7 +48,7 @@ namespace Nox.Notifications.Runtime {
 
 		public void OnDisposeMain() {
 			foreach (var h in _settingHandlers)
-				SettingAPI?.Remove(h.GetPath());
+				SettingAPI?.Remove(h.Path);
 			_settingHandlers = System.Array.Empty<IHandler>();
 
 			LanguageManager.RemovePack(_lang);

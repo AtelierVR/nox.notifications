@@ -8,15 +8,17 @@ namespace Nox.Notifications.Runtime.Settings {
 	/// Path: notifications > sound
 	/// </summary>
 	internal sealed class SoundSetting : ToggleHandler {
-		public override string[] GetPath()
+		public override string[] Path
 			=> new[] { "notifications", "sound" };
+
+		public override int Order => 90000;
 
 		protected override GameObject GetPrefab()
 			=> Main.CoreAPI.AssetAPI.GetAsset<GameObject>("settings:prefabs/toggle.prefab");
 
 		public SoundSetting() {
 			SetValue(NotificationSettings.Sound, notify: false);
-			SetLabelKey($"settings.entry.{string.Join(".", GetPath())}.label");
+			SetLabelKey($"settings.entry.{string.Join(".", Path)}.label");
 		}
 
 		protected override void OnValueChanged(bool value)

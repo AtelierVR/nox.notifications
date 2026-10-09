@@ -8,15 +8,17 @@ namespace Nox.Notifications.Runtime.Settings {
 	/// Path: notifications > vibration
 	/// </summary>
 	internal sealed class VibrationSetting : ToggleHandler {
-		public override string[] GetPath()
+		public override string[] Path
 			=> new[] { "notifications", "vibration" };
+
+		public override int Order => 90000;
 
 		protected override GameObject GetPrefab()
 			=> Main.CoreAPI.AssetAPI.GetAsset<GameObject>("settings:prefabs/toggle.prefab");
 
 		public VibrationSetting() {
 			SetValue(NotificationSettings.Vibration, notify: false);
-			SetLabelKey($"settings.entry.{string.Join(".", GetPath())}.label");
+			SetLabelKey($"settings.entry.{string.Join(".", Path)}.label");
 		}
 
 		protected override void OnValueChanged(bool value)

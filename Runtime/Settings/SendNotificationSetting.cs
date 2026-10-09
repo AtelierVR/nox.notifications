@@ -1,7 +1,6 @@
 using System;
 using Nox.CCK.Settings;
 using Nox.Settings;
-using Nox.UI;
 using UnityEngine;
 using Logger = Nox.CCK.Utils.Logger;
 
@@ -13,10 +12,10 @@ namespace Nox.Notifications.Runtime.Settings
     /// </summary>
     internal sealed class SendNotificationSetting : ButtonHandler
     {
-        public override string[] GetPath()
+        public override string[] Path
             => new[] { "debug", "send_notification" };
 
-        public override int GetOrder() => 100;
+public override int Order => 100100;
 
         public SendNotificationSetting()
         {

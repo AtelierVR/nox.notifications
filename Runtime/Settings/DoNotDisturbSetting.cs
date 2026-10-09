@@ -8,15 +8,17 @@ namespace Nox.Notifications.Runtime.Settings {
 	/// Path: notifications > do_not_disturb
 	/// </summary>
 	internal sealed class DoNotDisturbSetting : ToggleHandler {
-		public override string[] GetPath()
+		public override string[] Path
 			=> new[] { "notifications", "do_not_disturb" };
+
+		public override int Order => 90000;
 
 		protected override GameObject GetPrefab()
 			=> Main.CoreAPI.AssetAPI.GetAsset<GameObject>("settings:prefabs/toggle.prefab");
 
 		public DoNotDisturbSetting() {
 			SetValue(NotificationSettings.DoNotDisturb, notify: false);
-			SetLabelKey($"settings.entry.{string.Join(".", GetPath())}.label");
+			SetLabelKey($"settings.entry.{string.Join(".", Path)}.label");
 		}
 
 		protected override void OnValueChanged(bool value)
